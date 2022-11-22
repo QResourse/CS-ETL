@@ -1,0 +1,6 @@
+Requests/*.json
+Requests/*.csv
+.gitingnore
+config.xml
+__pycache__
+debug.py
