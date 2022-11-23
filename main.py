@@ -14,32 +14,32 @@ header = Func.getHeader(Conf.USERNAME,Conf.PASSWORD)
 REQUEST_URL = BASE + URL + ACTION
 
 
-# response = Func.getRequest(REQUEST_URL,payload,header)
+response = Func.getRequest(REQUEST_URL,payload,header)
 
-# if (response.ok != True):
-#   print("Failed to get response from API")
-#   exit()
+if (response.ok != True):
+  print("Failed to get response from API")
+  exit()
 
-# with open(RESPONSE_IMG, "w") as f:
-#     f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-#     f.close()
+with open(RESPONSE_IMG, "w") as f:
+    f.write(response.text.encode("utf8").decode("ascii", "ignore"))
+    f.close()
 
-# print("result of action can be found under the folder : " + RESPONSE_IMG)
+print("result of action can be found under the folder : " + RESPONSE_IMG)
 
-# ACTION = "containers/list?"
-# REQUEST_URL = BASE + URL + ACTION
+ACTION = "containers/list?"
+REQUEST_URL = BASE + URL + ACTION
 
-# response = Func.getRequest(REQUEST_URL,payload,header)
+response = Func.getRequest(REQUEST_URL,payload,header)
 
-# if (response.ok != True):
-#   print("Failed to get response from API")
-#   exit()
+if (response.ok != True):
+  print("Failed to get response from API")
+  exit()
 
-# with open(RESPONSE_CNT, "w") as f:
-#     f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-#     f.close()
+with open(RESPONSE_CNT, "w") as f:
+    f.write(response.text.encode("utf8").decode("ascii", "ignore"))
+    f.close()
 
-
+#########################################
 with open(RESPONSE_IMG) as f:
    data = json.load(f)
    print("Type:", type(data))
@@ -65,7 +65,8 @@ with open(RESPONSE_CNT) as f:
 
 CONTAINER_Header = ['created','updated','imageId','lastScanned','sensorUuid','hostname',\
   'host-uuid','lastUpdated','host-ip','qid','software.name','software.version',\
-    'software.fix','lastFound','firstFound','typeDetected','source','state','imageUuid','containerId']
+    'software.fix','lastFound','firstFound','typeDetected','source','state','imageUuid','containerId',\
+        'isDrift','isRoot']
 
 containerData = dataContainers['data']
 container = containerData[0]

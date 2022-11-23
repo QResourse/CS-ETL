@@ -227,7 +227,7 @@ def convertImageFileToCsv(ImageData):
             lastUpdated ='NA'
             hostip = 'NA'
         vulnList  = image['vulnerabilities']
-        if (len(vulnList)> 0):
+        if (vulnList):
             vulnIndex = 0 
             for vuln in vulnList:
                 #print(vuln['qid'])
@@ -258,7 +258,7 @@ def convertImageFileToCsv(ImageData):
                                 'lastFound' : lastFound,
                                 'firstFound': firstFound,
                                 'typeDetected': typeDetected})
-                        print(str(imageIndex) + "," + str(vulnIndex) + "," + str(swIndex))
+                        print("Image: "+ str(imageIndex) + ", QID: " + str(vulnIndex) + ", SW:" + str(swIndex))
                         swIndex+=1
                 else:
                     rows.append({'created': created,
@@ -276,23 +276,28 @@ def convertImageFileToCsv(ImageData):
                     'lastFound' : lastFound,
                     'firstFound': firstFound,
                     'typeDetected': typeDetected})
-                    print(str(imageIndex) + "," + str(vulnIndex) + "," + str(swIndex))
+                    print("Image: "+ str(imageIndex) + ", QID: " + str(vulnIndex))
                 vulnIndex+=1
-    imageIndex+=1
+        imageIndex+=1
+    return rows
 
 
-CONTAINER_Header = ['created','updated','imageId','lastScanned','sensorUuid','hostname',\
-  'host-uuid','lastUpdated','host-ip','qid','software.name','software.version',\
-    'software.fix','lastFound','firstFound','typeDetected','source','state','imageUuid','containerId']
+
 def convertContainerFileToCSV(containerData):
     ContainerIndex = 0
     rows = []
     for container in containerData:
-        print(container['imageId'])
+        #print(container['imageId'])
         created = container['created']
         updated = container['updated']
         imageId = container['imageId']
         lastScanned = container['lastScanned']
+        source = container['source']
+        state = container['state']
+        imageUuid = container['imageUuid']
+        containerId = container['containerId']
+        isDrift = container['isDrift']
+        isRoot = container['isRoot']
         if (container['host']):
             sensoruuid = container['host']['sensorUuid']
             hostname = container['host']['hostname']
@@ -309,7 +314,7 @@ def convertContainerFileToCSV(containerData):
         vulnIndex = 0 
         if (vulnList):
             for vuln in vulnList:
-                print(vuln['qid'])
+                #print(vuln['qid'])
                 qid = vuln['qid']
                 firstFound = vuln['firstFound']
                 lastFound = vuln['lastFound']
@@ -336,9 +341,18 @@ def convertContainerFileToCSV(containerData):
                                 'software.fix' : fixVersion,
                                 'lastFound' : lastFound,
                                 'firstFound': firstFound,
-                                'typeDetected': typeDetected})
-                        print(str(ContainerIndex) + "," + str(vulnIndex) + "," + str(swIndex))
+                                'typeDetected': typeDetected,
+                                'sensorUuid': sensoruuid,
+                                'source': source,
+                                'state': state,
+                                'imageUuid': imageUuid,
+                                'containerId': containerId,
+                                'isDrift': isDrift,
+                                'isRoot': isRoot
+                                })
+                        print("Container: "+ str(ContainerIndex) + ", QID: " + str(vulnIndex) + ", SW:" + str(swIndex))
                         swIndex+=1
+                vulnIndex+=1
         else:
             rows.append({'created': created,
             'updated': updated,
@@ -354,8 +368,14 @@ def convertContainerFileToCSV(containerData):
             'software.fix' : 'NA',
             'lastFound' : 'NA',
             'firstFound': 'NA',
-            'typeDetected': 'NA'})
-            print(str(ContainerIndex) + "," + str(vulnIndex))
-            vulnIndex+=1
+            'typeDetected': 'NA',
+            'sensorUuid': sensoruuid,
+            'source': source,
+            'state': state,
+            'imageUuid': imageUuid,
+            'containerId': containerId,
+            'isDrift': isDrift,
+            'isRoot': isRoot})
+            print("Container: "+ str(ContainerIndex) + ", QID: " + str(vulnIndex))
         ContainerIndex+=1
     return rows
