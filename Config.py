@@ -15,5 +15,7 @@ base = configList[0]
 
 RESPONSE_IMG = os.path.join("Requests","Image_Response.json")
 CSV_IMG = os.path.join("Requests","_images.csv")
+CSV_IMG_QID = os.path.join("Requests","_images_qid.csv")
+CSV_IMG_TAG = os.path.join("Requests","_images_tag.csv")
 RESPONSE_CNT = os.path.join("Requests","Container_Response.json")
 CSV_CONTAINERS = os.path.join("Requests","_containers.csv")

@@ -111,51 +111,6 @@ def getRequest(URL,payload,headers,files=[]):
         return  response
 
 
-# #This method is used to ensure all the inforation is gathered from the host API
-# def pocessHostRequests(response,RESPONSEXML,URL,payload,header,delta):
-#     RESPONSE_FILEARRAY = []
-#     index = 1
-#     while(checkForMoreRecords(RESPONSEXML) == 'true'):
-#         filename = "Response_" + str(index)+".xml"
-#         newFile =_os.path.join("Requests",filename)
-#         RESPONSE_FILEARRAY.append(newFile)
-#         with open(newFile, "w") as f:
-#             f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-#             f.close()
-#         lastId = getLastRecord(RESPONSEXML)
-#         payload = getXmlPayload(lastId,delta)
-#         response = postRequest(URL,payload,header)
-#         with open(RESPONSEXML, "w") as f:
-#             f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-#             f.close()
-#         index+=1
-#         print(lastId)
-#     filename = "Response_" + str(index)+".xml"
-#     newFile =_os.path.join("Requests",filename)
-#     RESPONSE_FILEARRAY.append(newFile)
-#     with open(newFile, "w") as f:
-#         f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-#         f.close()
-#     print(RESPONSE_FILEARRAY)
-#     return RESPONSE_FILEARRAY
-
-
-# def MergeHostAndTags(HOSTS,TAGS):
-#     df1 = pd.read_csv(HOSTS)
-#     df2 = pd.read_csv(TAGS)
-#     #list of hosts from _host file
-#     listOfHosts= df1.HOST_ID.unique().tolist()
-#     for host in listOfHosts:
-#         #all the indexes of tags relevent to host
-#         tagIndexList = df2.index[df2['HOST_ID']==host].tolist()
-#         print("Host ID: "+ str(host) + "Tag list: "+str(tagIndexList))
-#         for index in tagIndexList:
-#             TagName =  df2.iloc[index][3]
-#             hostIndex = df1.index[df1['HOST_ID']==host].tolist()
-#             df1.at[int(hostIndex[0]),TagName] = 1
-#     df1.to_csv(HOSTS)
-
-
 def deleteTempFiles(files):
     for file in files:
         if _os.path.exists(file):
@@ -163,219 +118,32 @@ def deleteTempFiles(files):
 
 
 
-#Used to process multiple requests
-def checkForMoreRecords(RESPONSEXML):
-    tree = Xet.parse(RESPONSEXML)
-    root = tree.getroot()   
-    Data = root.find("hasMoreRecords")
-    return str(Data.text)
+# #Used to process multiple requests
+# def checkForMoreRecords(RESPONSEXML):
+#     tree = Xet.parse(RESPONSEXML)
+#     root = tree.getroot()   
+#     Data = root.find("hasMoreRecords")
+#     return str(Data.text)
 
-#Used to check if this is the last record during multiple requests
-def getLastRecord(RESPONSEXML):
-    tree = Xet.parse(RESPONSEXML)
-    root = tree.getroot()   
-    Data = root.find("lastId")
-    return str(Data.text)
+# #Used to check if this is the last record during multiple requests
+# def getLastRecord(RESPONSEXML):
+#     tree = Xet.parse(RESPONSEXML)
+#     root = tree.getroot()   
+#     Data = root.find("lastId")
+#     return str(Data.text)
 
-#get list of hosts
-def getHostAssets(RESPONSEXML):
-    index = 0
-    rows = []
-    tree = Xet.parse(RESPONSEXML)
-    root = tree.getroot()
-    Data = root.find("data")
-    HostAssets  = Data.findall("HostAsset")
-    for host in HostAssets:
-        print("procecing host ",str(index))
-        id = tryToGetAttribute(host,"id")
-        rows.append({"HOST_ID": id})
-        index+=1
-    return rows
+# #get list of hosts
+# def getHostAssets(RESPONSEXML):
+#     index = 0
+#     rows = []
+#     tree = Xet.parse(RESPONSEXML)
+#     root = tree.getroot()
+#     Data = root.find("data")
+#     HostAssets  = Data.findall("HostAsset")
+#     for host in HostAssets:
+#         print("procecing host ",str(index))
+#         id = tryToGetAttribute(host,"id")
+#         rows.append({"HOST_ID": id})
+#         index+=1
+#     return rows
 
-# #Returns a list of host matching a tag
-# def GetAssetInfo(RESPONSE_FILEARRAY,HOSTS):
-
-#     cols = ["HOST_ID"]
-#     rows=[]
-#     for filename in RESPONSE_FILEARRAY:
-#         print("Processing file name: " + filename)
-#         rowsData= getHostAssets(filename)
-#         print("length of rows data: "+ str(len(rows)))
-#         rows = rows + rowsData
-
-#     print("length of rows: "+ str(len(rows)))
-#     df = pd.DataFrame(rows, columns=cols)
-#     df.to_csv(HOSTS,index=False, encoding="utf-8")
-
-def convertImageFileToCsv(ImageData):
-    imageIndex = 0
-    rows = []
-    for image in ImageData:
-        #print(image['imageId'])
-        created = image['created']
-        updated = image['updated']
-        imageId = image['imageId']
-        lastScanned = image['lastScanned']
-        if (image['lastFoundOnHost']):
-            hostname = image['lastFoundOnHost']['hostname']
-            hostuuid = image['lastFoundOnHost']['uuid']
-            lastUpdated = image['lastFoundOnHost']['lastUpdated']
-            hostip =  image['lastFoundOnHost']['ipAddress']
-        else:
-            hostname = 'NA'
-            hostuuid = 'NA'
-            lastUpdated ='NA'
-            hostip = 'NA'
-        vulnList  = image['vulnerabilities']
-        if (vulnList):
-            vulnIndex = 0 
-            for vuln in vulnList:
-                #print(vuln['qid'])
-                qid = vuln['qid']
-                firstFound = vuln['firstFound']
-                lastFound = vuln['lastFound']
-                typeDetected = vuln['typeDetected']
-                swList = vuln['software']
-                if(swList):
-                    swIndex = 0 
-                    for sw in swList:
-                        #print(sw['name'])
-                        swName = sw['name']
-                        swVersion = sw['version']
-                        fixVersion  = sw['fixVersion']
-                        rows.append({'created': created,
-                                'updated': updated,
-                                'imageId': imageId,
-                                'lastScanned': lastScanned,
-                                'hostname': hostname,
-                                'host-uuid': hostuuid,
-                                'lastUpdated' : lastUpdated,
-                                'host-ip': hostip,
-                                'qid': qid,
-                                'software.name': swName,
-                                'software.version': swVersion,
-                                'software.fix' : fixVersion,
-                                'lastFound' : lastFound,
-                                'firstFound': firstFound,
-                                'typeDetected': typeDetected})
-                        print("Image: "+ str(imageIndex) + ", QID: " + str(vulnIndex) + ", SW:" + str(swIndex))
-                        swIndex+=1
-                else:
-                    rows.append({'created': created,
-                    'updated': updated,
-                    'imageId': imageId,
-                    'lastScanned': lastScanned,
-                    'hostname': hostname,
-                    'host-uuid': hostuuid,
-                    'lastUpdated' : lastUpdated,
-                    'host-ip': hostip,
-                    'qid': qid,
-                    'software.name': 'NA',
-                    'software.version': 'NA',
-                    'software.fix' : 'NA',
-                    'lastFound' : lastFound,
-                    'firstFound': firstFound,
-                    'typeDetected': typeDetected})
-                    print("Image: "+ str(imageIndex) + ", QID: " + str(vulnIndex))
-                vulnIndex+=1
-        imageIndex+=1
-    return rows
-
-
-
-def convertContainerFileToCSV(containerData):
-    ContainerIndex = 0
-    rows = []
-    for container in containerData:
-        #print(container['imageId'])
-        created = container['created']
-        updated = container['updated']
-        imageId = container['imageId']
-        lastScanned = container['lastScanned']
-        source = container['source']
-        state = container['state']
-        imageUuid = container['imageUuid']
-        containerId = container['containerId']
-        isDrift = container['isDrift']
-        isRoot = container['isRoot']
-        if (container['host']):
-            sensoruuid = container['host']['sensorUuid']
-            hostname = container['host']['hostname']
-            hostuuid = container['host']['uuid']
-            lastUpdated = container['host']['lastUpdated']
-            hostip =  container['host']['ipAddress']
-        else:
-            sensoruuid = 'NA'
-            hostname = 'NA'
-            hostuuid = 'NA'
-            lastUpdated ='NA'
-            hostip = 'NA'
-        vulnList  = container['vulnerabilities']
-        vulnIndex = 0 
-        if (vulnList):
-            for vuln in vulnList:
-                #print(vuln['qid'])
-                qid = vuln['qid']
-                firstFound = vuln['firstFound']
-                lastFound = vuln['lastFound']
-                typeDetected = vuln['typeDetected']
-                swList = vuln['software']
-                swIndex = 0 
-                if(swList):
-                    for sw in swList:
-                        #print(sw['name'])
-                        swName = sw['name']
-                        swVersion = sw['version']
-                        fixVersion  = sw['fixVersion']
-                        rows.append({'created': created,
-                                'updated': updated,
-                                'imageId': imageId,
-                                'lastScanned': lastScanned,
-                                'hostname': hostname,
-                                'host-uuid': hostuuid,
-                                'lastUpdated' : lastUpdated,
-                                'host-ip': hostip,
-                                'qid': qid,
-                                'software.name': swName,
-                                'software.version': swVersion,
-                                'software.fix' : fixVersion,
-                                'lastFound' : lastFound,
-                                'firstFound': firstFound,
-                                'typeDetected': typeDetected,
-                                'sensorUuid': sensoruuid,
-                                'source': source,
-                                'state': state,
-                                'imageUuid': imageUuid,
-                                'containerId': containerId,
-                                'isDrift': isDrift,
-                                'isRoot': isRoot
-                                })
-                        print("Container: "+ str(ContainerIndex) + ", QID: " + str(vulnIndex) + ", SW:" + str(swIndex))
-                        swIndex+=1
-                vulnIndex+=1
-        else:
-            rows.append({'created': created,
-            'updated': updated,
-            'imageId': imageId,
-            'lastScanned': lastScanned,
-            'hostname': hostname,
-            'host-uuid': hostuuid,
-            'lastUpdated' : lastUpdated,
-            'host-ip': hostip,
-            'qid': 'NA',
-            'software.name': 'NA',
-            'software.version': 'NA',
-            'software.fix' : 'NA',
-            'lastFound' : 'NA',
-            'firstFound': 'NA',
-            'typeDetected': 'NA',
-            'sensorUuid': sensoruuid,
-            'source': source,
-            'state': state,
-            'imageUuid': imageUuid,
-            'containerId': containerId,
-            'isDrift': isDrift,
-            'isRoot': isRoot})
-            print("Container: "+ str(ContainerIndex) + ", QID: " + str(vulnIndex))
-        ContainerIndex+=1
-    return rows

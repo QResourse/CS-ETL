@@ -2,6 +2,9 @@ import Config as Conf
 import Lib.Functions as Func
 import json
 import pandas as pd 
+import time 
+import numpy as np
+
 
 BASE = Conf.base
 RESPONSE_IMG = Conf.RESPONSE_IMG
@@ -13,20 +16,92 @@ payload = {}
 header = Func.getHeader(Conf.USERNAME,Conf.PASSWORD) 
 REQUEST_URL = BASE + URL + ACTION
 
-
+#getting a list of all images
 response = Func.getRequest(REQUEST_URL,payload,header)
 
 if (response.ok != True):
   print("Failed to get response from API")
   exit()
+#getting a list of alll images
+ImageListData = json.loads(response.text)
+imageIds = []
+for image in ImageListData['data']:
+      imageIds.append(image['imageId'])
 
-with open(RESPONSE_IMG, "w") as f:
-    f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-    f.close()
 
-print("result of action can be found under the folder : " + RESPONSE_IMG)
+df = pd.DataFrame(imageIds)
+df = df.replace(to_replace='None', value=np.nan).dropna()
+imageIdsList = df[0].unique()
 
-ACTION = "containers/list?"
+
+rows = []
+tagRows = []
+TAG_HEADER = {'imageId','tag'}
+IMAGE_VULN_Header = ['created','updated','author','imageId','lastScanned','totalVulCount',\
+  'scanStatus','lastFound','firstFound','severity','customerSeverity','typeDetected',\
+   'risk','category','discoveryType','qid','cvssInfo.baseScore','cvss3Info.baseScore',\
+    'ageInDays','fixed','os','nonRunningKernel','nonExploitableConfig','runningService']
+for image in imageIdsList:
+  print("ImageId :" + image)
+  ACTION = "images/"+image
+  REQUEST_URL = BASE + URL + ACTION
+  time.sleep(2)
+  response = Func.getRequest(REQUEST_URL,payload,header)
+  if (response == {'Error'}):
+    print("Failed to get response from API or no data for image")
+  else:
+    print(image + " - OK")
+    data = json.loads(response.text)
+    repos = data['repo']
+    for repo in repos:
+      tagRows.append(
+        {'imageId': data['imageId'],'tag' : repo['tag']})
+    vulns = data['vulnerabilities']
+    for vuln in vulns:
+      row = {
+        'created' : data['created'],
+        'updated' : data['updated'],
+        'author' : data['author'],
+        'imageId' : data['imageId'],
+        'lastScanned' : data['lastScanned'],
+        'totalVulCount' : data['totalVulCount'],
+        'scanStatus' : data['scanStatus'],
+        'lastFound' : vuln['lastFound'],
+        'firstFound' : vuln['firstFound'],
+        'severity' : vuln['severity'],
+        'customerSeverity' : vuln['customerSeverity'],
+        'typeDetected' : vuln['typeDetected'],
+        'status' : vuln['status'],
+        'risk': vuln['risk'],
+        'category' : vuln['category'],
+        'discoveryType' : vuln['discoveryType'],
+        'qid' : vuln['qid'],
+        'cvssInfo.baseScore' : vuln['cvssInfo']['baseScore'],
+        'cvss3Info.baseScore' : vuln['cvss3Info']['baseScore'],
+        'ageInDays' : vuln['ageInDays'],
+        'fixed' : vuln['fixed'],
+        'os' : vuln['os'],
+        'nonRunningKernel' : vuln['nonRunningKernel'],
+        'nonExploitableConfig' : vuln['nonExploitableConfig'],
+        'runningService' : vuln['runningService']
+      }
+      rows.append(row)
+
+MyImagedata = pd.DataFrame(rows,columns=IMAGE_VULN_Header)
+MyImagedata.to_csv(Conf.CSV_IMG_QID,index=False)
+
+MyTagData = pd.DataFrame(tagRows,columns=TAG_HEADER)
+MyTagData.to_csv(Conf.CSV_IMG_TAG,index=False)
+
+
+
+
+
+
+
+
+########################
+ACTION = "containers/"
 REQUEST_URL = BASE + URL + ACTION
 
 response = Func.getRequest(REQUEST_URL,payload,header)
@@ -35,44 +110,65 @@ if (response.ok != True):
   print("Failed to get response from API")
   exit()
 
-with open(RESPONSE_CNT, "w") as f:
-    f.write(response.text.encode("utf8").decode("ascii", "ignore"))
-    f.close()
 
-#########################################
-with open(RESPONSE_IMG) as f:
-   data = json.load(f)
-   print("Type:", type(data))
+ContainerListData = json.loads(response.text)
+ContainerIds = []
+for container in ContainerListData['data']:
+      ContainerIds.append(container['containerId'])
 
 
-ImageData = data['data'] 
-IMG_Header = ['created','updated','imageId','lastScanned','hostname',\
-  'host-uuid','lastUpdated','host-ip','qid','software.name','software.version',\
-    'software.fix','lastFound','firstFound','typeDetected']
+df = pd.DataFrame(ContainerIds)
+df = df.replace(to_replace='None', value=np.nan).dropna()
+containerIdsList = df[0].unique()
 
-rows = Func.convertImageFileToCsv(ImageData)
+rows = []
+CONTAINER_VULN_Header = ['created','updated','name','imageId','operatingSystem',\
+  'lastScanned','state','containerId','lastFound','firstFound','severity','customerSeverity','typeDetected',\
+   'risk','category','discoveryType','qid','cvssInfo.baseScore','cvss3Info.baseScore',\
+    'ageInDays','fixed','os','nonRunningKernel','nonExploitableConfig','runningService']
 
+for container in containerIdsList:
+  print("containerId :" + container)
+  ACTION = "containers/"+container
+  REQUEST_URL = BASE + URL + ACTION
+  time.sleep(2)
+  response = Func.getRequest(REQUEST_URL,payload,header)
+  if (response == {'Error'}):
+    print("Failed to get response from API or no data for image")
+  else:
+    print(container + " - OK")
+    data = json.loads(response.text)
+    vulns = data['vulnerabilities']
+    for vuln in vulns:
+      row = {
+        'created' : data['created'],
+        'updated' : data['updated'],
+        'name' : data['name'],
+        'imageId' : data['imageId'],
+        'operatingSystem' : data['operatingSystem'],
+        'containerId' : data['containerId'],
+        'state' : data['state'],
+        'lastFound' : vuln['lastFound'],
+        'firstFound' : vuln['firstFound'],
+        'severity' : vuln['severity'],
+        'customerSeverity' : vuln['customerSeverity'],
+        'typeDetected' : vuln['typeDetected'],
+        'status' : vuln['status'],
+        'risk': vuln['risk'],
+        'category' : vuln['category'],
+        'discoveryType' : vuln['discoveryType'],
+        'qid' : vuln['qid'],
+        'cvssInfo.baseScore' : vuln['cvssInfo']['baseScore'],
+        'cvss3Info.baseScore' : vuln['cvss3Info']['baseScore'],
+        'ageInDays' : vuln['ageInDays'],
+        'fixed' : vuln['fixed'],
+        'os' : vuln['os'],
+        'nonRunningKernel' : vuln['nonRunningKernel'],
+        'nonExploitableConfig' : vuln['nonExploitableConfig'],
+        'runningService' : vuln['runningService']
+      }
+      rows.append(row)
 
+MyContainerData = pd.DataFrame(rows,columns=CONTAINER_VULN_Header)
+MyContainerData.to_csv(Conf.CSV_CONTAINERS,index=False)
 
-      
-Mydata = pd.DataFrame(rows,columns=IMG_Header)
-Mydata.to_csv(Conf.CSV_IMG)
-
-################################
-with open(RESPONSE_CNT) as f:
-   dataContainers = json.load(f)
-   print("Type:", type(dataContainers))
-
-CONTAINER_Header = ['created','updated','imageId','lastScanned','sensorUuid','hostname',\
-  'host-uuid','lastUpdated','host-ip','qid','software.name','software.version',\
-    'software.fix','lastFound','firstFound','typeDetected','source','state','imageUuid','containerId',\
-        'isDrift','isRoot']
-
-containerData = dataContainers['data']
-container = containerData[0]
-#def convertContainerFileToCsv(containerData):
-
-rows = Func.convertContainerFileToCSV(containerData)
-
-Mydata = pd.DataFrame(rows,columns=CONTAINER_Header)
-Mydata.to_csv(Conf.CSV_CONTAINERS)
