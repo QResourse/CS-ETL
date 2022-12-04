@@ -14,6 +14,7 @@ base = configList[0]
 ###Change the environment POD
 
 RESPONSE_IMG = os.path.join("Requests","Image_Response.json")
+RESPONSE_CNT_LIST = os.path.join("Requests","Container_List_Response.json")
 CSV_IMG = os.path.join("Requests","_images.csv")
 CSV_IMG_QID = os.path.join("Requests","_images_qid.csv")
 CSV_IMG_TAG = os.path.join("Requests","_images_tag.csv")

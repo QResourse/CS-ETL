@@ -78,6 +78,24 @@ def getHeader(USERNAME,PASSWORD):
     }
     return headers
 
+#Used to get the header of the request
+def getHeaderBearer(token):
+    headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'QualysPostman',
+    'Authorization': 'Bearer '+ token
+    }
+    return headers
+
+#Used to get the header of the request
+def getTokenHeader():
+    headers = {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Accept": "application/json",
+    "X-Requested-With": "QualysPostman",
+    }
+    return headers
 
 #Used to Post requests
 def postRequest(URL,payload,headers,files=[]):
@@ -88,7 +106,7 @@ def postRequest(URL,payload,headers,files=[]):
     except:
         print("Failed to send request to API")
         return str(response.status_code)
-    
+
     if (response.ok != True):
         print("Failed to get response from API")
         return {"Error"}
@@ -100,7 +118,7 @@ def getRequest(URL,payload,headers,files=[]):
     print("POSTING to "+ URL)
     print("Payload: "+ str(payload))
     try:
-        response = requests.request("GET", URL, headers=headers, data=payload, files=files)
+        response = requests.request("GET", URL, headers=headers, data=payload)
     except:
         print("Failed to send request to API")
     
